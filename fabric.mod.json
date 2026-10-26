@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "amongus",
+	"version": "${version}",
+	"name": "Among Us",
+	"description": "Among Us in Minecraft: roles, red sword kills, vents, tasks, meetings, sabotage.",
+	"authors": ["You"],
+	"license": "CC0-1.0",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.amongus.AmongUsMod"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
