@@ -314,4 +314,62 @@ final class Hud {
 		}
 		if (p.role.impostor && p.alive) l.add(Game.txt("Kill: " + (p.killCd > 0 ? (p.killCd / 20 + 1) + "s" : "READY"), "red"));
 		int shown = 0;
-		for
+		for (Game.TaskRef t : p.tasks) {
+			if (shown >= 8) break;
+			MapData.TaskDef d = Game.map.tasks.get(t.idx);
+			String name = d.name.length() > 20 ? d.name.substring(0, 20) : d.name;
+			String prog = d.steps.size() > 1 && !t.done ? " " + t.step + "/" + d.steps.size() : "";
+			String text = (t.done ? "+ " : "- ") + name + prog + " [" + MapData.diffTag(d.diff) + "]";
+			l.add(Game.txt(text, t.done ? "dark_gray" : MapData.diffColor(d.diff)));
+			shown++;
+		}
+		return l;
+	}
+
+	static void refresh(Game.PState p, boolean force) {
+		ServerPlayer sp = Game.find(p.id);
+		String room = sp != null && Game.map.ready() ? roomAt(sp.getX(), sp.getZ()) : "...";
+		p.loc = room;
+
+		// top location bar
+		int mode = mode(p);
+		String barText = "Location: " + room;
+		if (p.slot >= SIDEBAR_SLOTS && Game.phase != Game.Phase.LOBBY) {
+			int done = 0;
+			for (Game.TaskRef t : p.tasks) if (t.done) done++;
+			barText += "   |   " + (p.role.impostor ? "Fake tasks " : "Tasks ") + done + "/" + p.tasks.size();
+		}
+		String key = mode == MODE_OFF ? "off" : barText;
+		if (force || !key.equals(p.locSent)) {
+			if (mode == MODE_OFF) {
+				Game.cmd("bossbar set " + bossId(p) + " players");
+			} else {
+				Game.cmd("bossbar set " + bossId(p) + " name " + Game.txt(barText, "aqua"));
+				Game.cmd("bossbar set " + bossId(p) + " players " + p.name);
+			}
+			p.locSent = key;
+		}
+		if (p.slot >= SIDEBAR_SLOTS) return;
+
+		// sidebar
+		List<String> now = lines(p, sp, room);
+		String o = obj(p);
+		if (p.hudLines == null || p.hudLines.size() != now.size() || force) {
+			Game.cmd("scoreboard objectives remove " + o);
+			Game.cmd("scoreboard objectives add " + o + " dummy " + Game.txt("AMONG US", "gold"));
+			Game.cmd("scoreboard objectives modify " + o + " numberformat blank");
+			for (int k = 0; k < now.size(); k++) {
+				Game.cmd("scoreboard players set l" + k + " " + o + " " + (now.size() - k));
+				Game.cmd("scoreboard players display name l" + k + " " + o + " " + now.get(k));
+			}
+			Game.cmd("scoreboard objectives setdisplay sidebar.team." + TEAM_COLORS[p.slot] + " " + o);
+		} else {
+			for (int k = 0; k < now.size(); k++) {
+				if (!now.get(k).equals(p.hudLines.get(k))) {
+					Game.cmd("scoreboard players display name l" + k + " " + o + " " + now.get(k));
+				}
+			}
+		}
+		p.hudLines = now;
+	}
+}

@@ -359,4 +359,21 @@ public final class AmongCommands {
 			case "tasktime" -> Game.taskTime = Math.max(50, Math.min(v, 1000));
 			case "o2easy" -> Game.o2Easy = v != 0;
 			case "shapeshifters" -> Game.shapeshifters = Math.min(v, 3);
-			case "engineers" -> Game.engine
+			case "engineers" -> Game.engineers = Math.min(v, 4);
+			case "scientists" -> Game.scientists = Math.min(v, 4);
+			case "killcd" -> Game.killCd = Math.max(5, v);
+			case "discuss" -> Game.discuss = Math.max(5, v);
+			case "vote" -> Game.voteTime = Math.max(5, v);
+			case "meetings" -> Game.meetings = Math.min(v, 9);
+			case "shiftduration" -> Game.shiftDuration = Math.max(5, v);
+			case "ventduration" -> Game.ventDuration = Math.max(1, v);
+			case "ventcooldown" -> Game.ventCooldown = v;
+			case "buttoncd" -> Game.buttonCd = v;
+			case "redsword" -> Game.redSword = v != 0;
+			default -> {
+				return "Unknown setting '" + key + "'. See /among status";
+			}
+		}
+		return "Set " + key + " = " + v;
+	}
+}

@@ -26,7 +26,7 @@ import java.util.UUID;
 
 /** All Among Us game logic. Everything runs on the server thread. */
 public final class Game {
-	public enum Phase { LOBBY, PLAYING, DISCUSS, VOTE }
+	public enum Phase { LOBBY, PLAYING, DISCUSS, VOTE, EJECT }
 
 	// ---- settings (change with /among set <key> <value>) ----
 	static int impostors = 0;        // 0 = automatic   (/impostor <n>)
@@ -34,9 +34,9 @@ public final class Game {
 	static int shapeshifters = 1;
 	static int engineers = 1;
 	static int scientists = 1;
-	static int easyTasks = 2;
-	static int mediumTasks = 2;
-	static int hardTasks = 1;
+	static int easyTasks = 3;
+	static int mediumTasks = 3;
+	static int hardTasks = 2;
 	static int killCd = 25;          // seconds
 	static int discuss = 20;         // seconds
 	static int voteTime = 30;        // seconds
@@ -47,6 +47,7 @@ public final class Game {
 	static int buttonCd = 15;        // emergency button cooldown (seconds)
 	static boolean o2Easy = false;   // true = the O2 code is also shown at the O2 keypad
 	static boolean redSword = true;
+	static int taskTime = 200;       // task time limits in percent (100 = normal, 200 = double time)
 
 	// ---- state ----
 	static MinecraftServer server;
@@ -58,6 +59,10 @@ public final class Game {
 	static final List<int[]> bloodSpots = new ArrayList<>();
 	static final ArrayDeque<Object> work = new ArrayDeque<>(); // build queue: String command | Integer wait | Runnable
 	static UUID host;
+	static boolean created;          // is there a game right now?
+	static String gameName = "";
+	static boolean isPublic = true;
+	static String gameCode = "";
 	static boolean testMode;
 	static boolean lightsOut;
 	static boolean[] lightsState = new boolean[0];
@@ -120,6 +125,8 @@ public final class Game {
 		final List<TaskRef> tasks = new ArrayList<>();
 		Tasks.Run run;
 		List<String> hudLines;
+		String loc = "";
+		String locSent = "";
 
 		PState(UUID id, String name) {
 			this.id = id;
@@ -151,6 +158,36 @@ public final class Game {
 	static String btn(String label, String color, String command) {
 		return "{\"text\":\"[" + esc(label) + "] \",\"color\":\"" + color
 			+ "\",\"click_event\":{\"action\":\"run_command\",\"command\":\"" + esc(command) + "\"}}";
+	}
+
+	// ---- SNBT helpers for the 1.21.6+ dialog screens ----
+	static String sn(String s) {
+		return "\"" + esc(s) + "\"";
+	}
+
+	static String comp(String text, String color) {
+		return "{text:" + sn(text) + ",color:" + sn(color) + "}";
+	}
+
+	static String line(String text, String color) {
+		return "{type:\"minecraft:plain_message\",contents:" + comp(text, color) + ",width:260}";
+	}
+
+	/** A click-to-suggest button for chat (fills the chat box instead of running). */
+	static String sbtn(String label, String color, String command) {
+		return "{\"text\":\"[" + esc(label) + "] \",\"color\":\"" + color
+			+ "\",\"click_event\":{\"action\":\"suggest_command\",\"command\":\"" + esc(command) + "\"}}";
+	}
+
+	/** Info screen with one OK button. */
+	static void notice(String name, String title, String titleColor, List<String> bodyLines) {
+		StringBuilder sb = new StringBuilder("{type:\"minecraft:notice\",title:" + comp(title, titleColor) + ",body:[");
+		for (int i = 0; i < bodyLines.size(); i++) {
+			if (i > 0) sb.append(",");
+			sb.append(bodyLines.get(i));
+		}
+		sb.append("]}");
+		cmd("dialog show " + name + " " + sb);
 	}
 
 	static void raw(String name, String json) {
@@ -226,7 +263,7 @@ public final class Game {
 	}
 
 	static void dress(String name, int rgb) {
-		String c = "[dyed_color=" + rgb + ",unbreakable={}]";
+		String c = "[dyed_color=" + rgb + ",unbreakable={},enchantments={\"minecraft:binding_curse\":1}]";
 		cmd("item replace entity " + name + " armor.head with minecraft:leather_helmet" + c);
 		cmd("item replace entity " + name + " armor.chest with minecraft:leather_chestplate" + c);
 		cmd("item replace entity " + name + " armor.legs with minecraft:leather_leggings" + c);
@@ -314,7 +351,8 @@ public final class Game {
 	static void menu(ServerPlayer sp) {
 		String n = sp.getName().getString();
 		raw(n, txt("=== AMONG US ===", "gold"));
-		raw(n, "[" + btn("JOIN", "green", "/among join") + "," + btn("LEAVE", "red", "/among leave") + ","
+		raw(n, "[" + btn("CREATE", "green", "/among create") + "," + btn("GAMES", "aqua", "/among games") + ","
+			+ btn("JOIN", "green", "/among join") + "," + btn("LEAVE", "red", "/among leave") + ","
 			+ btn("START", "yellow", "/among start") + "," + btn("STATUS", "aqua", "/among status") + ","
 			+ btn("STATS", "gold", "/among stats") + "," + btn("HELP", "white", "/among help") + "]");
 	}
@@ -322,10 +360,12 @@ public final class Game {
 	static void help(ServerPlayer sp) {
 		String n = sp.getName().getString();
 		String[] lines = {
-			"/among join | leave | start [force] | stop | status | stats | tasks",
+			"/among create [name] - make a game (name = your name by default) | rename <name> | public | private [code]",
+			"/among games - list games | /among join [name] [code] | leave | start [force] | stop | status | stats | tasks",
+			"/among minimap right|top|off - where the mini map and room name show up",
 			"/impostor <n>  /crewmate <n>  - how many impostors / crewmates (lobby starts itself when full)",
 			"/among report - report a nearby body (or right-click it)",
-			"/among vote <color|skip> - during voting (buttons appear in chat)",
+			"/among vote <color|skip> - during voting (a voting screen opens; /among vote alone reopens it)",
 			"/among code <number> - for 'code' tasks;  /among o2 <code> - fix O2",
 			"/among sabotage lights|o2|reactor - impostors",
 			"/among shift <color> - shapeshifter | /among vitals - scientist",
@@ -339,14 +379,45 @@ public final class Game {
 
 	static void status(ServerPlayer sp) {
 		String n = sp.getName().getString();
-		tell(n, "Phase: " + phase + " | Players: " + players.size() + "/" + AmongColor.NAMES.length
+		tell(n, "Game: " + (created ? gameName + (isPublic ? " (public)" : " (private" + (sp.getUUID().equals(host) ? ", code " + gameCode : "") + ")") : "none")
+			+ " | Phase: " + phase + " | Players: " + players.size() + "/" + AmongColor.NAMES.length
 			+ " | Map ready: " + map.ready() + " | Lobby target: " + (lobbyTarget() > 0 ? lobbyTarget() : "none"), "yellow");
 		tell(n, "impostors=" + impostors + " (0=auto) crewmates=" + crewmates + " shapeshifters=" + shapeshifters
 			+ " engineers=" + engineers + " scientists=" + scientists, "gray");
 		tell(n, "easytasks=" + easyTasks + " mediumtasks=" + mediumTasks + " hardtasks=" + hardTasks
 			+ " killcd=" + killCd + " discuss=" + discuss + " vote=" + voteTime + " meetings=" + meetings, "gray");
 		tell(n, "shiftduration=" + shiftDuration + " ventduration=" + ventDuration + " ventcooldown=" + ventCooldown
-			+ " buttoncd=" + buttonCd + " o2easy=" + (o2Easy ? 1 : 0) + " redsword=" + (redSword ? 1 : 0), "gray");
+			+ " buttoncd=" + buttonCd + " o2easy=" + (o2Easy ? 1 : 0) + " redsword=" + (redSword ? 1 : 0)
+			+ " tasktime=" + taskTime + "%", "gray");
+	}
+
+	static void minimapInfo(ServerPlayer sp) {
+		PState p = players.get(sp.getUUID());
+		String n = sp.getName().getString();
+		if (p == null) {
+			tell(n, "Join a game first (/among join).", "red");
+			return;
+		}
+		int m = Hud.mode(p);
+		tell(n, "Mini map: " + (m == Hud.MODE_RIGHT ? "RIGHT" : m == Hud.MODE_TOP ? "TOP" : "OFF")
+			+ "  -  change it with /among minimap right | top | off", "yellow");
+	}
+
+	static void setMinimap(ServerPlayer sp, int mode) {
+		PState p = players.get(sp.getUUID());
+		String n = sp.getName().getString();
+		if (p == null) {
+			tell(n, "Join a game first (/among join).", "red");
+			return;
+		}
+		if (p.slot >= Hud.SIDEBAR_SLOTS) {
+			tell(n, "Players 17-20 only get the top location bar (Minecraft has 16 sidebar colours).", "yellow");
+			return;
+		}
+		Hud.setMode(p, mode);
+		tell(n, mode == Hud.MODE_RIGHT ? "Mini map on the RIGHT (with your room name)."
+			: mode == Hud.MODE_TOP ? "Room name on TOP only; task list stays on the right."
+			: "Mini map and room name OFF.", "green");
 	}
 
 	static void stats(ServerPlayer sp) {
@@ -382,7 +453,8 @@ public final class Game {
 			tell(name, "Can't change this during a game.", "red");
 			return;
 		}
-		crewmates = Math.min(n, 11);
+		crewmates = Math.min(n, AmongColor.NAMES.length - 1);
+		if (lobbyTarget() > AmongColor.NAMES.length) crewmates = AmongColor.NAMES.length - Math.max(impostors, 1);
 		tellAll("Crewmates set to " + (crewmates == 0 ? "not set" : String.valueOf(crewmates)) + "." + lobbyHint(), "green");
 		hudDirty = true;
 	}
@@ -392,7 +464,159 @@ public final class Game {
 		return t > 0 ? " The game starts by itself when " + t + " players have joined." : "";
 	}
 
-	static void join(ServerPlayer sp) {
+	// ---------------------------------------------------------------------
+	// creating / listing / joining games (one game at a time)
+	// ---------------------------------------------------------------------
+
+	private static String cleanName(String raw, String fallback) {
+		StringBuilder sb = new StringBuilder();
+		if (raw != null) {
+			for (char ch : raw.toCharArray()) {
+				if (Character.isLetterOrDigit(ch) || ch == '_' || ch == '-') sb.append(ch);
+			}
+		}
+		String r = sb.toString();
+		if (r.length() > 16) r = r.substring(0, 16);
+		return r.isEmpty() ? fallback : r;
+	}
+
+	private static String hostName() {
+		PState h = host == null ? null : players.get(host);
+		return h == null ? "?" : h.name;
+	}
+
+	static void closeGame() {
+		created = false;
+		gameName = "";
+		gameCode = "";
+		isPublic = true;
+		host = null;
+	}
+
+	static void create(ServerPlayer sp, String nameArg) {
+		String n = sp.getName().getString();
+		if (created) {
+			tell(n, "A game already exists: \"" + gameName + "\" (host " + hostName() + "). Only one game at a time.", "red");
+			return;
+		}
+		if (phase != Phase.LOBBY) {
+			tell(n, "Wait for the current round to finish.", "red");
+			return;
+		}
+		if (!map.ready()) {
+			tell(n, "No map yet. Stand in a big flat area and run /among map buildmap", "red");
+			return;
+		}
+		if (!work.isEmpty()) {
+			tell(n, "The map is still being built. Wait for it to finish.", "red");
+			return;
+		}
+		if (hasArmor(sp)) {
+			tell(n, "Take off your armor first (it would be replaced during the game).", "red");
+			return;
+		}
+		created = true;
+		gameName = cleanName(nameArg, n);
+		isPublic = true;
+		gameCode = "";
+		host = null;
+		joinNow(sp);
+		tell(n, "Game \"" + gameName + "\" created and PUBLIC. You are the host.", "gold");
+		tell(n, "/among rename <name> | /among private [code] | /among public | /among start", "gray");
+		announce();
+	}
+
+	/** Tell everybody on the server that a game is open. */
+	private static void announce() {
+		if (server == null || !created) return;
+		for (ServerPlayer o : server.getPlayerList().getPlayers()) {
+			if (players.containsKey(o.getUUID())) continue;
+			String on = o.getName().getString();
+			if (isPublic) {
+				raw(on, "[" + txt("Among Us game \"" + gameName + "\" is open!  ", "gold") + "," + btn("CLICK TO JOIN", "green", "/among join " + gameName) + "]");
+			} else {
+				raw(on, "[" + txt("A PRIVATE Among Us game \"" + gameName + "\" was created. Ask the host for the code: ", "gold")
+					+ "," + sbtn("JOIN", "green", "/among join " + gameName + " ") + "]");
+			}
+		}
+	}
+
+	static void rename(ServerPlayer sp, String nameArg) {
+		String n = sp.getName().getString();
+		if (!created || !sp.getUUID().equals(host)) {
+			tell(n, "Only the host of a game can rename it.", "red");
+			return;
+		}
+		gameName = cleanName(nameArg, gameName);
+		tellAll("The game is now called \"" + gameName + "\".", "gold");
+		hudDirty = true;
+	}
+
+	static void setPublic(ServerPlayer sp) {
+		String n = sp.getName().getString();
+		if (!created || !sp.getUUID().equals(host)) {
+			tell(n, "Only the host of a game can do that.", "red");
+			return;
+		}
+		isPublic = true;
+		gameCode = "";
+		tellAll("The game is now PUBLIC. Anyone can join.", "green");
+		if (phase == Phase.LOBBY) announce();
+	}
+
+	static void setPrivate(ServerPlayer sp, String code) {
+		String n = sp.getName().getString();
+		if (!created || !sp.getUUID().equals(host)) {
+			tell(n, "Only the host of a game can do that.", "red");
+			return;
+		}
+		isPublic = false;
+		gameCode = code != null && !code.isEmpty() ? code : String.valueOf(1000 + RNG.nextInt(9000));
+		tellAll("The game is now PRIVATE.", "yellow");
+		tell(n, "Join code: " + gameCode + "  (friends join with /among join " + gameName + " " + gameCode + ")", "gold");
+	}
+
+	static void games(ServerPlayer sp) {
+		String n = sp.getName().getString();
+		if (!created) {
+			tell(n, "No games right now. Make one with /among create [name]", "yellow");
+			return;
+		}
+		tell(n, "=== GAMES ===", "gold");
+		tell(n, gameName + "  |  host: " + hostName() + "  |  players: " + players.size() + "/" + AmongColor.NAMES.length
+			+ "  |  " + (isPublic ? "PUBLIC" : "PRIVATE") + "  |  " + (phase == Phase.LOBBY ? "in lobby" : "round running"),
+			isPublic ? "green" : "yellow");
+		if (phase == Phase.LOBBY && !players.containsKey(sp.getUUID())) {
+			raw(n, "[" + (isPublic ? btn("JOIN " + gameName, "green", "/among join " + gameName)
+				: sbtn("JOIN " + gameName + " (needs code)", "yellow", "/among join " + gameName + " ")) + "]");
+		}
+	}
+
+	/** /among join [name] [code] */
+	static void join(ServerPlayer sp, String wanted, String code) {
+		String name = sp.getName().getString();
+		if (!created) {
+			tell(name, "There is no game yet. Create one with /among create [name]", "red");
+			return;
+		}
+		if (wanted != null && !wanted.equalsIgnoreCase(gameName)) {
+			tell(name, "No game called \"" + wanted + "\". See /among games", "red");
+			return;
+		}
+		if (!isPublic && !players.containsKey(sp.getUUID())) {
+			if (code == null) {
+				tell(name, "This game is PRIVATE. Use /among join " + gameName + " <code>", "red");
+				return;
+			}
+			if (!code.equals(gameCode)) {
+				tell(name, "Wrong code.", "red");
+				return;
+			}
+		}
+		joinNow(sp);
+	}
+
+	private static void joinNow(ServerPlayer sp) {
 		String name = sp.getName().getString();
 		if (phase != Phase.LOBBY) {
 			tell(name, "A game is running. Wait for it to end.", "red");
@@ -429,7 +653,7 @@ public final class Game {
 		cmd("gamemode adventure " + name);
 		tp(name, map.lobby.cx(), map.lobby.y, map.lobby.cz());
 		Hud.setup(p);
-		tellAll(name + " joined (" + players.size() + targetSuffix() + (lobbyTarget() > 0 ? "" : "/" + AmongColor.NAMES.length) + ")", "green");
+		tellAll(name + " joined \"" + gameName + "\" (" + players.size() + targetSuffix() + (lobbyTarget() > 0 ? "" : "/" + AmongColor.NAMES.length) + ")", "green");
 		hudDirty = true;
 		if (p.id.equals(host)) {
 			tell(name, "You are the host. Start with /among start, or set /impostor and /crewmate and the game starts when full.", "gold");
@@ -453,6 +677,7 @@ public final class Game {
 		}
 		if (players.isEmpty()) {
 			resetWorldState();
+			closeGame();
 			return;
 		}
 		hudDirty = true;
@@ -468,8 +693,15 @@ public final class Game {
 		if (dirtyNames.remove(name)) {
 			cleanupPlayer(name, false);
 		}
-		if (map.ready()) {
-			raw(name, "[" + txt("Among Us is on this server!  ", "gold") + "," + btn("CLICK TO JOIN", "green", "/among join") + "]");
+		if (created && phase == Phase.LOBBY) {
+			if (isPublic) {
+				raw(name, "[" + txt("Among Us game \"" + gameName + "\" is open!  ", "gold") + "," + btn("CLICK TO JOIN", "green", "/among join " + gameName) + "]");
+			} else {
+				raw(name, "[" + txt("A private Among Us game \"" + gameName + "\" exists. Ask the host for the code.  ", "gold")
+					+ "," + sbtn("JOIN", "green", "/among join " + gameName + " ") + "]");
+			}
+		} else if (map.ready() && !created) {
+			raw(name, "[" + txt("Among Us is on this server!  ", "gold") + "," + btn("CREATE A GAME", "green", "/among create") + "]");
 		}
 	}
 
@@ -538,7 +770,7 @@ public final class Game {
 			p.votedFor = -2;
 		}
 
-		int nImp = impostors > 0 ? impostors : (n >= 7 ? 2 : 1);
+		int nImp = impostors > 0 ? impostors : (n >= 14 ? 3 : n >= 7 ? 2 : 1);
 		if (n < 3) nImp = n == 2 ? 1 : 0;
 		else nImp = Math.min(nImp, (n - 1) / 2);
 		int nShape = Math.min(shapeshifters, nImp);
@@ -672,7 +904,7 @@ public final class Game {
 		if (players.isEmpty()) return;
 		tickN++;
 
-		if (hudDirty || tickN % 20 == 0) {
+		if (hudDirty || tickN % 10 == 0) {
 			hudDirty = false;
 			Hud.refreshAll(false);
 		}
@@ -683,6 +915,10 @@ public final class Game {
 
 		if (phase == Phase.LOBBY) {
 			lobbyTick();
+			return;
+		}
+		if (phase == Phase.EJECT) {
+			if (--phaseTicks <= 0) endMeeting();
 			return;
 		}
 		if (phase == Phase.DISCUSS) {
@@ -1383,7 +1619,47 @@ public final class Game {
 			title(p.name, head, sub, "red");
 			tell(p.name, head + ": " + sub + ". Discuss in chat! Voting starts in " + discuss + "s.", "gold");
 		}
+		meetingScreen(caller, bodyColor);
 		hudDirty = true;
+	}
+
+	/** "Color (Name)" of a player, from the color. */
+	static String who(int color) {
+		PState o = byColor(color);
+		return AmongColor.label(color) + (o != null ? " (" + o.name + ")" : "");
+	}
+
+	/** The Among Us style screen every player sees when a body is reported / the button is pressed. */
+	static void meetingScreen(PState caller, int bodyColor) {
+		boolean body = bodyColor >= 0;
+		List<String> lines = new ArrayList<>();
+		lines.add(line(who(caller.color) + (body ? " reported a dead body!" : " pressed the emergency button!"), "gold"));
+		if (body) lines.add(line("DEAD: " + who(bodyColor), "red"));
+		lines.add(line(" ", "white"));
+		lines.add(line("Players alive:", "green"));
+		for (PState o : alive()) lines.add(line("- " + who(o.color), AmongColor.hex(o.color)));
+		for (PState o : players.values()) {
+			if (!o.alive && o.color != bodyColor && o.color >= 0) lines.add(line("- " + who(o.color) + "  (dead)", "gray"));
+		}
+		lines.add(line(" ", "white"));
+		lines.add(line("Discuss in chat. Voting opens in " + discuss + " seconds.", "yellow"));
+		for (PState p : players.values()) notice(p.name, body ? "BODY REPORTED" : "EMERGENCY MEETING", "red", lines);
+	}
+
+	/** Voting screen: one button per living player ("Color - Name") plus Skip. */
+	static void voteScreen(PState p) {
+		StringBuilder sb = new StringBuilder("{type:\"minecraft:multi_action\",title:" + comp("WHO IS THE IMPOSTOR?", "red")
+			+ ",columns:2,body:[" + line("Click a player to vote, or Skip. You can also type /among vote <color>", "yellow") + "],actions:[");
+		boolean first = true;
+		for (PState o : alive()) {
+			if (!first) sb.append(",");
+			first = false;
+			sb.append("{label:").append(comp(AmongColor.label(o.color) + " - " + o.name + (o == p ? " (you)" : ""), AmongColor.hex(o.color)))
+				.append(",action:{type:\"minecraft:run_command\",command:").append(sn("among vote " + AmongColor.NAMES[o.color])).append("}}");
+		}
+		sb.append(",{label:").append(comp("Skip Vote", "gray"))
+			.append(",action:{type:\"minecraft:run_command\",command:\"among vote skip\"}}]}");
+		cmd("dialog show " + p.name + " " + sb);
 	}
 
 	static void beginVoting() {
@@ -1396,8 +1672,26 @@ public final class Game {
 		sb.append(btn("SKIP", "gray", "/among vote skip")).append("]");
 		for (PState p : players.values()) {
 			tell(p.name, "=== VOTE === click a color (or SKIP). Type /among vote <color> if clicking doesn't work.", "gold");
-			if (p.alive) raw(p.name, sb.toString());
+			if (p.alive) {
+				raw(p.name, sb.toString());
+				voteScreen(p);
+			}
 		}
+	}
+
+	/** /among vote (no argument): reopen the voting screen. */
+	static void voteReopen(ServerPlayer sp) {
+		PState p = players.get(sp.getUUID());
+		String n = sp.getName().getString();
+		if (p == null || phase != Phase.VOTE || !p.alive) {
+			tell(n, "You can't vote right now.", "red");
+			return;
+		}
+		if (p.votedFor != -2) {
+			tell(n, "You already voted.", "red");
+			return;
+		}
+		voteScreen(p);
 	}
 
 	static void vote(ServerPlayer sp, String target) {
@@ -1453,8 +1747,11 @@ public final class Game {
 		res.append("Skip=").append(skips);
 		tellAll(res.toString(), "yellow");
 
+		List<String> lines = new ArrayList<>();
 		if (best < 0 || tie || skips >= bestN) {
 			tellAll("Nobody was ejected.", "gray");
+			lines.add(line("No one was ejected.", "gray"));
+			lines.add(line(tie && best >= 0 ? "(Tie)" : "(Skipped)", "gray"));
 		} else {
 			PState e = byColor(best);
 			if (e != null) {
@@ -1463,9 +1760,15 @@ public final class Game {
 				cmd("effect clear " + e.name + " minecraft:slowness");
 				tellAll(AmongColor.label(best) + " was ejected. " + AmongColor.label(best) + " was "
 					+ (e.role.impostor ? "An Impostor." : "not An Impostor."), e.role.impostor ? "green" : "red");
+				lines.add(line(who(best) + " was " + (e.role.impostor ? "An Impostor." : "not An Impostor."), e.role.impostor ? "green" : "red"));
 			}
 		}
-		endMeeting();
+		lines.add(line(" ", "white"));
+		lines.add(line(res.toString(), "yellow"));
+		for (PState p : players.values()) notice(p.name, "EJECTION", "gold", lines);
+		phase = Phase.EJECT;
+		phaseTicks = 120; // 6 seconds to read the result
+		hudDirty = true;
 	}
 
 	static void endMeeting() {
