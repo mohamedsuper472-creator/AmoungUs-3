@@ -41,7 +41,7 @@ public final class MapData {
 
 	/** One step of a task: which mechanic, where. */
 	public static final class Step {
-		public String mech; // clicks hold sneak code swipe bar order wires memory asteroids shields sample
+		public String mech; // clicks hold sneak code math swipe bar order wires memory asteroids shields sample
 		public int a;
 		public int b;
 		public String room;
@@ -67,6 +67,19 @@ public final class MapData {
 	public List<P> reactors = new ArrayList<>();   // reactor panels
 	public List<Vent> vents = new ArrayList<>();
 	public List<TaskDef> tasks = new ArrayList<>();
+	public boolean hasOrigin;                      // true when the map was built by this version
+	public int ox;
+	public int oz;
+
+	/** World X of the layout origin (the Cafeteria centre). */
+	public int originX() {
+		return hasOrigin ? ox : (lobby != null ? lobby.x - Layout.LOBBY_X : 0);
+	}
+
+	/** World Z of the layout origin. */
+	public int originZ() {
+		return hasOrigin ? oz : (lobby != null ? lobby.z - Layout.LOBBY_Z : 0);
+	}
 
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
