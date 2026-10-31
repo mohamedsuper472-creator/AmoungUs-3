@@ -3,9 +3,10 @@
 	"id": "amongus",
 	"version": "${version}",
 	"name": "Among Us",
-	"description": "Among Us in Minecraft: roles, red sword kills, vents, tasks, meetings, sabotage.",
+	"description": "Among Us in Minecraft: roles, red sword kills, vents, 50+ tasks, meetings with real screens, sabotage, mini map, public/private games for up to 20 players.",
 	"authors": ["You"],
 	"license": "CC0-1.0",
+	"icon": "assets/amongus/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": ["com.amongus.AmongUsMod"]
