@@ -13,8 +13,8 @@ final class Tasks {
 	private Tasks() {}
 
 	private static final Random RNG = new Random();
-	private static final String[] WIRE_NAMES = {"Red", "Blue", "Yellow", "Pink"};
-	private static final String[] WIRE_HEX = {"#FF3030", "#3050FF", "#F5F557", "#ED54BA"};
+	private static final String[] WIRE_NAMES = {"Red", "Blue", "Yellow", "Pink", "Orange", "Green"};
+	private static final String[] WIRE_HEX = {"#FF3030", "#3050FF", "#F5F557", "#ED54BA", "#FF9020", "#30D030"};
 	private static final String[] MEM_NAMES = {"RED", "GREEN", "BLUE", "YELLOW"};
 	private static final String[] MEM_HEX = {"#FF3030", "#30D030", "#3050FF", "#F5F557"};
 
@@ -38,6 +38,11 @@ final class Tasks {
 			this.def = def;
 			this.step = step;
 		}
+	}
+
+	/** Task time limit in ticks, scaled by /among set tasktime (percent). */
+	private static int lim(int ticks) {
+		return Math.max(20, ticks * Game.taskTime / 100);
 	}
 
 	private static double dist2(ServerPlayer sp, MapData.P q) {
@@ -102,8 +107,8 @@ final class Tasks {
 		switch (st.mech) {
 			case "clicks" -> {
 				r.n = 1;
-				r.timer = st.b > 0 ? st.b : 200;
-				Game.bar(p.name, head + ": click the station " + st.a + " times (1/" + st.a + ")", "aqua");
+				r.timer = lim(st.b > 0 ? st.b : 200);
+				Game.bar(p.name, head + ": click the station " + st.a + " times (1/" + st.a + ") - " + (r.timer / 20) + "s", "aqua");
 			}
 			case "hold" -> Game.bar(p.name, head + ": stay near the station for " + st.a + " seconds...", "aqua");
 			case "sneak" -> Game.bar(p.name, head + ": HOLD SNEAK near the station for " + st.a + " seconds", "aqua");
@@ -111,20 +116,46 @@ final class Tasks {
 				int digits = Math.max(3, st.a);
 				int lo = (int) Math.pow(10, digits - 1);
 				r.code = lo + RNG.nextInt(lo * 9);
-				r.timer = (st.b > 0 ? st.b : 20) * 20;
+				r.timer = lim((st.b > 0 ? st.b : 20) * 20);
 				Game.tell(p.name, head + ": type /among code " + r.code + " within " + (r.timer / 20) + " seconds", "aqua");
 				Game.title(p.name, "CODE: " + r.code, "/among code " + r.code, "aqua");
 			}
+			case "math" -> {
+				int lvl = Math.max(1, Math.min(3, st.a));
+				String q;
+				if (lvl == 1) {
+					int x = 20 + RNG.nextInt(80);
+					int y = 20 + RNG.nextInt(80);
+					q = x + " + " + y;
+					r.code = x + y;
+				} else if (lvl == 2) {
+					int x = 6 + RNG.nextInt(14);
+					int y = 3 + RNG.nextInt(9);
+					int z = 10 + RNG.nextInt(60);
+					q = x + " x " + y + " + " + z;
+					r.code = x * y + z;
+				} else {
+					int x = 4 + RNG.nextInt(9);
+					int y = 3 + RNG.nextInt(9);
+					int z = 5 + RNG.nextInt(9);
+					int w = 10 + RNG.nextInt(25);
+					q = "(" + x + " + " + y + ") x " + z + " - " + w;
+					r.code = (x + y) * z - w;
+				}
+				r.timer = lim((st.b > 0 ? st.b : 45) * 20);
+				Game.tell(p.name, head + ": solve  " + q + " = ?  then type /among code <answer> within " + (r.timer / 20) + " seconds", "aqua");
+				Game.title(p.name, q + " = ?", "/among code <answer>", "aqua");
+			}
 			case "swipe" -> {
 				r.stamp = Game.tickN;
-				r.timer = 100;
+				r.timer = lim(100);
 				Game.bar(p.name, head + ": click again after 1-2 seconds - not too fast, not too slow!", "aqua");
 			}
 			case "bar" -> {
 				r.n = 0;
 				r.target = 3 + RNG.nextInt(15);
 				r.stamp = Game.tickN;
-				r.timer = 900;
+				r.timer = lim(900);
 				Game.tell(p.name, head + ": right-click when the marker | is inside the green ### zone (" + st.a + " time(s) in a row).", "aqua");
 			}
 			case "order" -> {
@@ -136,7 +167,7 @@ final class Tasks {
 				sendOrder(p, r);
 			}
 			case "wires" -> {
-				int n = Math.min(4, Math.max(2, st.a));
+				int n = Math.min(6, Math.max(2, st.a));
 				r.arr = new int[n];
 				for (int i = 0; i < n; i++) r.arr[i] = i;
 				shuffle(r.arr);
@@ -161,7 +192,7 @@ final class Tasks {
 			case "shields" -> {
 				int n = Math.max(5, st.a);
 				r.arr = new int[n];
-				int presses = 3 + RNG.nextInt(2);
+				int presses = 3 + RNG.nextInt(2) + n / 4;
 				for (int k = 0; k < presses; k++) toggle(r.arr, RNG.nextInt(n));
 				boolean any = false;
 				for (int v : r.arr) if (v != 0) any = true;
@@ -269,7 +300,7 @@ final class Tasks {
 					return;
 				}
 				switch (st.mech) {
-					case "clicks", "swipe", "code" -> {
+					case "clicks", "swipe", "code", "math" -> {
 						if (--r.timer <= 0) fail(p, "Task failed (too slow). Click the station to try again.");
 					}
 					case "bar" -> {
@@ -381,7 +412,7 @@ final class Tasks {
 	static void code(ServerPlayer sp, int value) {
 		Game.PState p = Game.players.get(sp.getUUID());
 		if (p == null || Game.phase != Game.Phase.PLAYING || !p.alive) return;
-		if (p.run == null || !"code".equals(p.run.step.mech)) {
+		if (p.run == null || !("code".equals(p.run.step.mech) || "math".equals(p.run.step.mech))) {
 			Game.tell(p.name, "You don't have a code task active. Click a task station first.", "gray");
 			return;
 		}
@@ -512,7 +543,7 @@ final class Tasks {
 			if (--r.aux <= 0) {
 				r.phase = 1;
 				r.target = 1 + RNG.nextInt(6);
-				r.timer = 60;
+				r.timer = lim(60);
 				StringBuilder sb = new StringBuilder("[");
 				for (int i = 1; i <= 6; i++) {
 					if (i > 1) sb.append(",");
