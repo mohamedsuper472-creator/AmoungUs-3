@@ -91,6 +91,9 @@ public final class MapBuilder {
 		Layout.decor();
 
 		MapData m = new MapData();
+		m.hasOrigin = true;
+		m.ox = ox;
+		m.oz = oz;
 		m.lobby = p(Layout.LOBBY_X, 0, Layout.LOBBY_Z);
 		m.button = p(Layout.BUTTON_X, 1, Layout.BUTTON_Z);
 		Layout.content(m);
