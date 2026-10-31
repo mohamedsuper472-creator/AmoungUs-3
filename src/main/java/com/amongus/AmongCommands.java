@@ -23,14 +23,20 @@ public final class AmongCommands {
 	private static final SuggestionProvider<CommandSourceStack> COLORS =
 		(ctx, b) -> SharedSuggestionProvider.suggest(AmongColor.names(), b);
 	private static final SuggestionProvider<CommandSourceStack> VOTES =
+		(ctx, b) -> {
+			java.util.List<String> l = new java.util.ArrayList<>(AmongColor.names());
+			l.add("skip");
+			return SharedSuggestionProvider.suggest(l, b);
+		};
+	private static final SuggestionProvider<CommandSourceStack> GAMES =
 		(ctx, b) -> SharedSuggestionProvider.suggest(
-			Arrays.asList("skip", "red", "blue", "green", "pink", "orange", "yellow", "black", "white", "purple", "brown", "cyan", "lime"), b);
+			Game.created ? java.util.List.of(Game.gameName) : java.util.List.<String>of(), b);
 	private static final SuggestionProvider<CommandSourceStack> KEYS =
 		(ctx, b) -> SharedSuggestionProvider.suggest(
 			Arrays.asList("impostors", "crewmates", "shapeshifters", "engineers", "scientists", "easytasks", "mediumtasks", "hardtasks", "killcd", "discuss",
-				"vote", "meetings", "shiftduration", "ventduration", "ventcooldown", "buttoncd", "o2easy", "redsword"), b);
+				"vote", "meetings", "shiftduration", "ventduration", "ventcooldown", "buttoncd", "o2easy", "redsword", "tasktime"), b);
 	private static final SuggestionProvider<CommandSourceStack> TYPES =
-		(ctx, b) -> SharedSuggestionProvider.suggest(Arrays.asList("clicks", "hold", "sneak", "code", "swipe", "bar"), b);
+		(ctx, b) -> SharedSuggestionProvider.suggest(Arrays.asList("clicks", "hold", "sneak", "code", "math", "swipe", "bar", "order", "wires", "memory", "asteroids", "shields"), b);
 
 	private static ServerPlayer pl(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		Game.server = c.getSource().getServer();
@@ -62,10 +68,68 @@ public final class AmongCommands {
 				Game.status(pl(c));
 				return 1;
 			}))
-			.then(Commands.literal("join").executes(c -> {
-				Game.join(pl(c));
+			.then(Commands.literal("create")
+				.executes(c -> {
+					Game.create(pl(c), null);
+					return 1;
+				})
+				.then(Commands.argument("name", StringArgumentType.word()).executes(c -> {
+					Game.create(pl(c), StringArgumentType.getString(c, "name"));
+					return 1;
+				})))
+			.then(Commands.literal("rename")
+				.then(Commands.argument("name", StringArgumentType.word()).executes(c -> {
+					Game.rename(pl(c), StringArgumentType.getString(c, "name"));
+					return 1;
+				})))
+			.then(Commands.literal("public").executes(c -> {
+				Game.setPublic(pl(c));
 				return 1;
 			}))
+			.then(Commands.literal("private")
+				.executes(c -> {
+					Game.setPrivate(pl(c), null);
+					return 1;
+				})
+				.then(Commands.argument("code", StringArgumentType.word()).executes(c -> {
+					Game.setPrivate(pl(c), StringArgumentType.getString(c, "code"));
+					return 1;
+				})))
+			.then(Commands.literal("games").executes(c -> {
+				Game.games(pl(c));
+				return 1;
+			}))
+			.then(Commands.literal("minimap")
+				.executes(c -> {
+					Game.minimapInfo(pl(c));
+					return 1;
+				})
+				.then(Commands.literal("right").executes(c -> {
+					Game.setMinimap(pl(c), Hud.MODE_RIGHT);
+					return 1;
+				}))
+				.then(Commands.literal("top").executes(c -> {
+					Game.setMinimap(pl(c), Hud.MODE_TOP);
+					return 1;
+				}))
+				.then(Commands.literal("off").executes(c -> {
+					Game.setMinimap(pl(c), Hud.MODE_OFF);
+					return 1;
+				})))
+			.then(Commands.literal("join")
+				.executes(c -> {
+					Game.join(pl(c), null, null);
+					return 1;
+				})
+				.then(Commands.argument("name", StringArgumentType.word()).suggests(GAMES)
+					.executes(c -> {
+						Game.join(pl(c), StringArgumentType.getString(c, "name"), null);
+						return 1;
+					})
+					.then(Commands.argument("code", StringArgumentType.word()).executes(c -> {
+						Game.join(pl(c), StringArgumentType.getString(c, "name"), StringArgumentType.getString(c, "code"));
+						return 1;
+					}))))
 			.then(Commands.literal("leave").executes(c -> {
 				ServerPlayer p = pl(c);
 				Game.leave(p.getUUID(), false);
@@ -102,6 +166,10 @@ public final class AmongCommands {
 					return 1;
 				})))
 			.then(Commands.literal("vote")
+				.executes(c -> {
+					Game.voteReopen(pl(c));
+					return 1;
+				})
 				.then(Commands.argument("target", StringArgumentType.word()).suggests(VOTES).executes(c -> {
 					Game.vote(pl(c), StringArgumentType.getString(c, "target"));
 					return 1;
@@ -257,7 +325,7 @@ public final class AmongCommands {
 				Game.setCrewmates(pl(c), null);
 				return 1;
 			})
-			.then(Commands.argument("number", IntegerArgumentType.integer(0, 11)).executes(c -> {
+			.then(Commands.argument("number", IntegerArgumentType.integer(0, AmongColor.NAMES.length - 1)).executes(c -> {
 				Game.setCrewmates(pl(c), IntegerArgumentType.getInteger(c, "number"));
 				return 1;
 			})));
@@ -284,27 +352,11 @@ public final class AmongCommands {
 		if (Game.phase != Game.Phase.LOBBY) return "Can't change settings during a game.";
 		switch (key) {
 			case "impostors" -> Game.impostors = Math.min(v, 3);
-			case "crewmates" -> Game.crewmates = Math.min(v, 11);
-			case "easytasks" -> Game.easyTasks = Math.min(v, 6);
-			case "mediumtasks" -> Game.mediumTasks = Math.min(v, 6);
-			case "hardtasks" -> Game.hardTasks = Math.min(v, 5);
+			case "crewmates" -> Game.crewmates = Math.min(v, AmongColor.NAMES.length - 1);
+			case "easytasks" -> Game.easyTasks = Math.min(v, 8);
+			case "mediumtasks" -> Game.mediumTasks = Math.min(v, 8);
+			case "hardtasks" -> Game.hardTasks = Math.min(v, 6);
+			case "tasktime" -> Game.taskTime = Math.max(50, Math.min(v, 1000));
 			case "o2easy" -> Game.o2Easy = v != 0;
 			case "shapeshifters" -> Game.shapeshifters = Math.min(v, 3);
-			case "engineers" -> Game.engineers = Math.min(v, 4);
-			case "scientists" -> Game.scientists = Math.min(v, 4);
-			case "killcd" -> Game.killCd = Math.max(5, v);
-			case "discuss" -> Game.discuss = Math.max(5, v);
-			case "vote" -> Game.voteTime = Math.max(5, v);
-			case "meetings" -> Game.meetings = Math.min(v, 9);
-			case "shiftduration" -> Game.shiftDuration = Math.max(5, v);
-			case "ventduration" -> Game.ventDuration = Math.max(1, v);
-			case "ventcooldown" -> Game.ventCooldown = v;
-			case "buttoncd" -> Game.buttonCd = v;
-			case "redsword" -> Game.redSword = v != 0;
-			default -> {
-				return "Unknown setting '" + key + "'. See /among status";
-			}
-		}
-		return "Set " + key + " = " + v;
-	}
-}
+			case "engineers" -> Game.engine
