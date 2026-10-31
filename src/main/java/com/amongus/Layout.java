@@ -86,6 +86,70 @@ final class Layout {
 		MapBuilder.fill(-48, 0, -38, -44, 0, -34, "minecraft:iron_block");
 		MapBuilder.fill(-47, 1, -37, -45, 1, -35, "minecraft:glass");
 		MapBuilder.fill(-53, 0, -33, -51, 0, -33, "minecraft:white_carpet");
+
+		// ---- more room details (v3.1) ----
+		// cafeteria: snack counters + plants
+		MapBuilder.fill(-8, 0, -50, -4, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.fill(4, 0, -50, 8, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.set(-20, 0, -50, "minecraft:potted_fern");
+		MapBuilder.set(20, 0, -50, "minecraft:potted_fern");
+		MapBuilder.set(-20, 0, -22, "minecraft:potted_fern");
+		MapBuilder.set(20, 0, -22, "minecraft:potted_fern");
+		// upper + lower engine: copper coils
+		MapBuilder.fill(-94, 0, -43, -92, 2, -43, "minecraft:copper_block");
+		MapBuilder.fill(-78, 0, -43, -76, 2, -43, "minecraft:copper_block");
+		MapBuilder.set(-93, 3, -43, "minecraft:sea_lantern");
+		MapBuilder.set(-77, 3, -43, "minecraft:sea_lantern");
+		MapBuilder.fill(-94, 0, 43, -92, 2, 43, "minecraft:copper_block");
+		MapBuilder.fill(-78, 0, 43, -76, 2, 43, "minecraft:copper_block");
+		MapBuilder.set(-93, 3, 43, "minecraft:sea_lantern");
+		MapBuilder.set(-77, 3, 43, "minecraft:sea_lantern");
+		// medbay: beds + counter
+		MapBuilder.set(-54, 0, -31, "minecraft:white_bed[facing=east,part=foot]");
+		MapBuilder.set(-53, 0, -31, "minecraft:white_bed[facing=east,part=head]");
+		MapBuilder.set(-54, 0, -29, "minecraft:white_bed[facing=east,part=foot]");
+		MapBuilder.set(-53, 0, -29, "minecraft:white_bed[facing=east,part=head]");
+		MapBuilder.fill(-45, 0, -43, -41, 0, -43, "minecraft:smooth_quartz");
+		// weapons: cannons
+		MapBuilder.fill(48, 0, -37, 48, 0, -33, "minecraft:iron_block");
+		MapBuilder.set(48, 1, -37, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.set(48, 1, -35, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.set(48, 1, -33, "minecraft:lightning_rod[facing=up]");
+		// reactor: containment bars around the core
+		MapBuilder.fill(-115, 0, -6, -109, 1, -6, "minecraft:iron_bars");
+		MapBuilder.fill(-115, 0, 0, -109, 1, 0, "minecraft:iron_bars");
+		MapBuilder.fill(-115, 0, -5, -115, 1, -1, "minecraft:iron_bars");
+		MapBuilder.fill(-109, 0, -5, -109, 1, -1, "minecraft:iron_bars");
+		// security: desk + chairs
+		MapBuilder.fill(-84, 0, -8, -76, 0, -8, "minecraft:dark_oak_slab[type=bottom]");
+		MapBuilder.set(-82, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
+		MapBuilder.set(-78, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
+		// admin: filing cabinets
+		MapBuilder.set(20, 0, 12, "minecraft:barrel[facing=up]");
+		MapBuilder.set(22, 0, 12, "minecraft:barrel[facing=up]");
+		MapBuilder.set(24, 0, 12, "minecraft:barrel[facing=up]");
+		// o2: water tanks
+		MapBuilder.set(56, 0, -16, "minecraft:water_cauldron[level=3]");
+		MapBuilder.set(48, 0, -16, "minecraft:water_cauldron[level=3]");
+		// navigation: pilot chair + side console
+		MapBuilder.set(96, 0, -11, "minecraft:quartz_stairs[facing=north]");
+		MapBuilder.fill(104, 0, -20, 104, 0, -14, "minecraft:smooth_quartz_slab[type=bottom]");
+		// electrical: generators + fuse boxes
+		MapBuilder.fill(-36, 0, 22, -36, 2, 26, "minecraft:iron_block");
+		MapBuilder.set(-36, 3, 23, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.set(-36, 3, 25, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.fill(-54, 0, 20, -54, 2, 22, "minecraft:iron_block");
+		// storage: crates
+		MapBuilder.fill(-16, 0, 48, -14, 1, 49, "minecraft:spruce_planks");
+		MapBuilder.fill(7, 0, 45, 8, 1, 48, "minecraft:spruce_planks");
+		MapBuilder.fill(-16, 0, 26, -15, 1, 27, "minecraft:hay_block[axis=y]");
+		// communications: server racks + dish
+		MapBuilder.fill(24, 0, 46, 24, 2, 50, "minecraft:blast_furnace[facing=east]");
+		MapBuilder.fill(37, 0, 50, 38, 0, 51, "minecraft:iron_block");
+		MapBuilder.set(37, 1, 50, "minecraft:lightning_rod[facing=up]");
+		// shields: generators
+		MapBuilder.fill(75, 0, 34, 76, 2, 36, "minecraft:cyan_terracotta");
+		MapBuilder.set(75, 3, 35, "minecraft:sea_lantern");
 	}
 
 	/** Stations, vents, panels, tasks. Runs last so nothing overwrites them. */
@@ -137,36 +201,39 @@ final class Layout {
 		task(m, "Fuel Engines", 3, st("sneak", 4, 0, "Storage", -14, 28), st("sneak", 5, 0, "Upper Engine", -90, -41), st("sneak", 4, 0, "Storage", -14, 28), st("sneak", 5, 0, "Lower Engine", -90, 41));
 		task(m, "Inspect Sample", 3, st("sample", 0, 0, "MedBay", -40, -29));
 		task(m, "Calibrate Distributor", 3, st("bar", 3, 1, "Electrical", -53, 30));
-		MapBuilder.set(-119, 0, -15, "minecraft:lectern");
-		MapBuilder.set(-119, 0, 9, "minecraft:lectern");
-		MapBuilder.set(-90, 0, -41, "minecraft:lectern");
-		MapBuilder.set(-90, 0, 41, "minecraft:lectern");
-		MapBuilder.set(-84, 0, -41, "minecraft:lectern");
-		MapBuilder.set(-84, 0, 41, "minecraft:lectern");
-		MapBuilder.set(-54, 0, 17, "minecraft:lectern");
-		MapBuilder.set(-53, 0, 30, "minecraft:lectern");
-		MapBuilder.set(-46, 0, -41, "minecraft:lectern");
-		MapBuilder.set(-45, 0, 31, "minecraft:lectern");
-		MapBuilder.set(-40, 0, -29, "minecraft:lectern");
-		MapBuilder.set(-37, 0, 17, "minecraft:lectern");
-		MapBuilder.set(-19, 0, -49, "minecraft:lectern");
-		MapBuilder.set(-14, 0, 28, "minecraft:lectern");
-		MapBuilder.set(17, 0, -5, "minecraft:lectern");
-		MapBuilder.set(17, 0, 11, "minecraft:lectern");
-		MapBuilder.set(19, 0, -49, "minecraft:lectern");
-		MapBuilder.set(22, 0, -5, "minecraft:lectern");
-		MapBuilder.set(28, 0, 11, "minecraft:lectern");
-		MapBuilder.set(31, 0, 38, "minecraft:lectern");
-		MapBuilder.set(49, 0, -15, "minecraft:lectern");
-		MapBuilder.set(51, 0, -41, "minecraft:lectern");
-		MapBuilder.set(51, 0, -29, "minecraft:lectern");
-		MapBuilder.set(60, 0, 41, "minecraft:lectern");
-		MapBuilder.set(67, 0, -29, "minecraft:lectern");
-		MapBuilder.set(67, 0, 26, "minecraft:lectern");
-		MapBuilder.set(87, 0, -3, "minecraft:lectern");
-		MapBuilder.set(89, 0, -21, "minecraft:lectern");
-		MapBuilder.set(95, 0, -21, "minecraft:lectern");
-		MapBuilder.set(101, 0, -21, "minecraft:lectern");
+
+		// ---- more tasks (v3.1) ----
+		// easy
+		task(m, "Water Plants", 1, st("clicks", 5, 300, "O2", 57, -6));
+		task(m, "Repair Drill", 1, st("hold", 6, 0, "Upper Engine", -92, -27));
+		task(m, "Align Telescope", 1, st("sneak", 4, 0, "Navigation", 102, -8));
+		task(m, "Clean Vent Filter", 1, st("clicks", 7, 260, "Security", -85, 3));
+		task(m, "Prime Fuel Tank", 1, st("sneak", 4, 0, "Storage", 4, 29));
+		task(m, "Calibrate Radio", 1, st("bar", 1, 3, "Communications", 28, 43));
+		task(m, "Sort Samples", 1, st("order", 4, 0, "MedBay", -53, -41));
+		task(m, "Check Cargo Manifest", 1, st("math", 1, 0, "Storage", -14, 46));
+		// medium
+		task(m, "Download Logs", 2, st("hold", 8, 0, "Security", -75, 3), st("hold", 8, 0, "Cafeteria", 19, -23));
+		task(m, "Reset Breaker", 2, st("order", 6, 0, "Electrical", -37, 30));
+		task(m, "Decode Signal", 2, st("math", 2, 0, "Communications", 36, 43));
+		task(m, "Weapon Calibration", 2, st("bar", 2, 2, "Weapons", 62, -29));
+		task(m, "Sync Cooling", 2, st("wires", 4, 0, "Reactor", -119, -5));
+		task(m, "Route Cargo", 2, st("order", 8, 0, "Storage", 6, 47), st("clicks", 6, 260, "Admin", 19, 3));
+		task(m, "Boost Engines", 2, st("clicks", 10, 300, "Lower Engine", -92, 27), st("clicks", 10, 300, "Upper Engine", -76, -30));
+		task(m, "Charge Batteries", 2, st("clicks", 8, 300, "Electrical", -50, 24), st("hold", 8, 0, "Shields", 74, 41));
+		task(m, "Scan Hull", 2, st("sneak", 6, 0, "Navigation", 90, -8), st("sneak", 6, 0, "Weapons", 62, -29));
+		task(m, "Refill Oxygen Tanks", 2, st("sneak", 5, 0, "O2", 57, -6), st("clicks", 6, 260, "Storage", 4, 29));
+		// very hard (3-4 steps, big puzzles)
+		task(m, "Reboot Mainframe", 3, st("memory", 7, 0, "Communications", 36, 43), st("hold", 10, 0, "Admin", 35, 3), st("math", 3, 0, "Communications", 28, 43));
+		task(m, "Overclock Reactor", 3, st("wires", 5, 0, "Reactor", -117, 3), st("memory", 8, 0, "Reactor", -119, -5), st("shields", 9, 0, "Electrical", -50, 24));
+		task(m, "Defend the Ship", 3, st("asteroids", 12, 0, "Weapons", 62, -29), st("bar", 4, 1, "Navigation", 90, -8), st("shields", 9, 0, "Shields", 74, 41));
+		task(m, "Full Diagnostics", 3, st("order", 12, 0, "MedBay", -38, -41), st("math", 3, 0, "Security", -75, 3), st("wires", 6, 0, "Admin", 19, 3));
+		task(m, "Purge Fuel Lines", 3, st("sneak", 6, 0, "Storage", 6, 47), st("sneak", 6, 0, "Lower Engine", -76, 27), st("sneak", 6, 0, "Upper Engine", -92, -27), st("sneak", 6, 0, "Storage", 4, 29));
+		task(m, "Master Wiring", 3, st("wires", 6, 0, "Electrical", -50, 24), st("wires", 6, 0, "Admin", 35, 3), st("wires", 6, 0, "Navigation", 102, -8), st("wires", 6, 0, "Reactor", -117, 3));
+		task(m, "Rebuild Core", 3, st("memory", 8, 0, "Reactor", -119, -5), st("asteroids", 10, 0, "Weapons", 51, -41), st("bar", 5, 1, "Electrical", -53, 30), st("shields", 11, 0, "Shields", 74, 41));
+		task(m, "Navigate Asteroid Field", 3, st("asteroids", 14, 0, "Navigation", 90, -8), st("order", 12, 0, "Navigation", 89, -21));
+		task(m, "Emergency Decryption", 3, st("math", 3, 0, "Admin", 35, 3), st("code", 5, 40, "Communications", 28, 43), st("math", 3, 0, "Security", -85, 3), st("memory", 9, 0, "Cafeteria", 19, -23));
+		task(m, "Quarantine Protocol", 3, st("sample", 0, 0, "MedBay", -40, -29), st("shields", 9, 0, "MedBay", -38, -41), st("order", 10, 0, "Cafeteria", 19, -23), st("hold", 12, 0, "Admin", 19, 3));
 	}
 
 	private static MapData.Step st(String mech, int a, int b, String room, int x, int z) {
@@ -176,6 +243,7 @@ final class Layout {
 		s.b = b;
 		s.room = room;
 		s.pos = MapBuilder.p(x, 0, z);
+		MapBuilder.set(x, 0, z, "minecraft:lectern");
 		return s;
 	}
 
