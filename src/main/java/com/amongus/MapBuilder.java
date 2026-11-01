@@ -47,8 +47,9 @@ public final class MapBuilder {
 		}
 
 		// solid shells (all rooms and corridors), then carve interiors
-		for (int[] r : Layout.ROOMS) {
-			fill(r[0] - 1, -1, r[1] - 1, r[2] + 1, 7, r[3] + 1, "minecraft:gray_concrete");
+		for (int i = 0; i < Layout.ROOMS.length; i++) {
+			int[] r = Layout.ROOMS[i];
+			fill(r[0] - 1, -1, r[1] - 1, r[2] + 1, 7, r[3] + 1, Layout.ROOM_WALLS[i]);
 		}
 		for (int[] c : Layout.CORRIDORS) {
 			fill(c[0] - 1, -1, c[1] - 1, c[2] + 1, 5, c[3] + 1, "minecraft:gray_concrete");
@@ -67,6 +68,37 @@ public final class MapBuilder {
 		for (int i = 0; i < Layout.ROOMS.length; i++) {
 			int[] r = Layout.ROOMS[i];
 			fill(r[0], -1, r[1], r[2], -1, r[3], Layout.ROOM_FLOORS[i]);
+		}
+
+		// room floor borders (a coloured frame around every room floor, also marks the doorways)
+		for (int i = 0; i < Layout.ROOMS.length; i++) {
+			int[] r = Layout.ROOMS[i];
+			String b = Layout.ROOM_BORDERS[i];
+			fill(r[0], -1, r[1], r[2], -1, r[1], b);
+			fill(r[0], -1, r[3], r[2], -1, r[3], b);
+			fill(r[0], -1, r[1], r[0], -1, r[3], b);
+			fill(r[2], -1, r[1], r[2], -1, r[3], b);
+		}
+		// hallway centre line (dashed yellow)
+		for (int[] c : Layout.CORRIDORS) {
+			boolean horizontal = (c[2] - c[0]) > (c[3] - c[1]);
+			if (horizontal) {
+				int zc = (c[1] + c[3]) / 2;
+				for (int x = c[0] + 1; x <= c[2] - 2; x += 4) fill(x, -1, zc, x + 1, -1, zc, "minecraft:yellow_concrete");
+			} else {
+				int xc = (c[0] + c[2]) / 2;
+				for (int z = c[1] + 1; z <= c[3] - 2; z += 4) fill(xc, -1, z, xc, -1, z + 1, "minecraft:yellow_concrete");
+			}
+		}
+
+		// ceiling cove: a coloured trim around the top of every room
+		for (int i = 0; i < Layout.ROOMS.length; i++) {
+			int[] r = Layout.ROOMS[i];
+			String t = Layout.ROOM_TRIMS[i];
+			fill(r[0], 6, r[1], r[2], 6, r[1], t);
+			fill(r[0], 6, r[3], r[2], 6, r[3], t);
+			fill(r[0], 6, r[1], r[0], 6, r[3], t);
+			fill(r[2], 6, r[1], r[2], 6, r[3], t);
 		}
 
 		// ceiling lights

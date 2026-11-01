@@ -59,6 +59,7 @@ public final class Game {
 	static final List<int[]> bloodSpots = new ArrayList<>();
 	static final ArrayDeque<Object> work = new ArrayDeque<>(); // build queue: String command | Integer wait | Runnable
 	static UUID host;
+	static final Map<UUID, Role> forcedRoles = new LinkedHashMap<>();   // /among role (testing)
 	static boolean created;          // is there a game right now?
 	static String gameName = "";
 	static boolean isPublic = true;
@@ -363,6 +364,7 @@ public final class Game {
 			"/among create [name] - make a game (name = your name by default) | rename <name> | public | private [code]",
 			"/among games - list games | /among join [name] [code] | leave | start [force] | stop | status | stats | tasks",
 			"/among minimap right|top|off - where the mini map and room name show up",
+			"/among role crewmate|engineer|scientist|impostor|shapeshifter|random - choose your role for the next round (testing)",
 			"/impostor <n>  /crewmate <n>  - how many impostors / crewmates (lobby starts itself when full)",
 			"/among report - report a nearby body (or right-click it)",
 			"/among vote <color|skip> - during voting (a voting screen opens; /among vote alone reopens it)",
@@ -389,6 +391,39 @@ public final class Game {
 		tell(n, "shiftduration=" + shiftDuration + " ventduration=" + ventDuration + " ventcooldown=" + ventCooldown
 			+ " buttoncd=" + buttonCd + " o2easy=" + (o2Easy ? 1 : 0) + " redsword=" + (redSword ? 1 : 0)
 			+ " tasktime=" + taskTime + "%", "gray");
+	}
+
+	/** /among role [name|random]: choose your role for the NEXT round (testing). */
+	static void forceRole(ServerPlayer sp, String roleName) {
+		String n = sp.getName().getString();
+		PState p = players.get(sp.getUUID());
+		if (p == null) {
+			tell(n, "Join a game first (/among join).", "red");
+			return;
+		}
+		if (phase != Phase.LOBBY) {
+			tell(n, "You can only choose your role in the lobby, before /among start.", "red");
+			return;
+		}
+		if (roleName == null) {
+			Role f = forcedRoles.get(sp.getUUID());
+			tell(n, "Next round role: " + (f == null ? "random" : f.display)
+				+ "   (use /among role crewmate|engineer|scientist|impostor|shapeshifter|random)", "yellow");
+			return;
+		}
+		if (roleName.equalsIgnoreCase("random")) {
+			forcedRoles.remove(sp.getUUID());
+			tell(n, "Your role will be random.", "green");
+			return;
+		}
+		for (Role r : Role.values()) {
+			if (r.name().equalsIgnoreCase(roleName) || r.display.equalsIgnoreCase(roleName)) {
+				forcedRoles.put(sp.getUUID(), r);
+				tell(n, "Next round you will be: " + r.display + ".", "green");
+				return;
+			}
+		}
+		tell(n, "Unknown role. Use crewmate, engineer, scientist, impostor, shapeshifter or random.", "red");
 	}
 
 	static void minimapInfo(ServerPlayer sp) {
@@ -668,6 +703,7 @@ public final class Game {
 			tellAll(label(p) + " left the game.", "gray");
 		}
 		players.remove(id);
+		forcedRoles.remove(id);
 		Hud.teardown(p);
 		if (disconnected) dirtyNames.add(p.name);
 		else cleanupPlayer(p.name, false);
@@ -770,18 +806,40 @@ public final class Game {
 			p.votedFor = -2;
 		}
 
-		int nImp = impostors > 0 ? impostors : (n >= 14 ? 3 : n >= 7 ? 2 : 1);
-		if (n < 3) nImp = n == 2 ? 1 : 0;
-		else nImp = Math.min(nImp, (n - 1) / 2);
-		int nShape = Math.min(shapeshifters, nImp);
-		int idx = 0;
-		for (int i = 0; i < nImp; i++) {
-			list.get(idx++).role = i < nShape ? Role.SHAPESHIFTER : Role.IMPOSTOR;
+		if (testMode) {
+			// test mode (fewer than 3 players): every role has the same chance, so you get to try all of them
+			Role[] pool = Role.values();
+			for (PState p : list) p.role = pool[RNG.nextInt(pool.length)];
+			if (n == 2 && !list.get(0).role.impostor && !list.get(1).role.impostor) {
+				list.get(RNG.nextInt(2)).role = RNG.nextBoolean() ? Role.IMPOSTOR : Role.SHAPESHIFTER;
+			}
+		} else {
+			int nImp = impostors > 0 ? impostors : (n >= 14 ? 3 : n >= 7 ? 2 : 1);
+			nImp = Math.min(nImp, (n - 1) / 2);
+			int nShape = Math.min(shapeshifters, nImp);
+			int idx = 0;
+			// shapeshifters are picked at random among the impostors (not always the first one)
+			for (int i = 0; i < nImp; i++) {
+				list.get(idx++).role = i < nShape ? Role.SHAPESHIFTER : Role.IMPOSTOR;
+			}
+			int nEng = Math.min(engineers, n - idx);
+			for (int i = 0; i < nEng; i++) list.get(idx++).role = Role.ENGINEER;
+			int nSci = Math.min(scientists, n - idx);
+			for (int i = 0; i < nSci; i++) list.get(idx++).role = Role.SCIENTIST;
 		}
-		int nEng = Math.min(engineers, n - idx);
-		for (int i = 0; i < nEng; i++) list.get(idx++).role = Role.ENGINEER;
-		int nSci = Math.min(scientists, n - idx);
-		for (int i = 0; i < nSci; i++) list.get(idx++).role = Role.SCIENTIST;
+		// /among role <role>: forced roles (for testing). Only applies to the next round.
+		for (PState p : list) {
+			Role forced = forcedRoles.remove(p.id);
+			if (forced != null) p.role = forced;
+		}
+		if (!testMode) {
+			boolean anyImp = false;
+			for (PState p : list) if (p.role.impostor) anyImp = true;
+			if (!anyImp) {
+				// forcing everybody to crew would end the game at once: make one non-forced player an impostor
+				list.get(RNG.nextInt(list.size())).role = Role.IMPOSTOR;
+			}
+		}
 
 		// tasks: everyone gets a list; impostors' list is fake (they can't finish them)
 		for (PState p : list) assignTasks(p);
@@ -1044,7 +1102,7 @@ public final class Game {
 		st.tasks++;
 		st.coins += coins;
 		Stats.save();
-		tell(p.name, "Task complete: " + def.name + " [" + MapData.diffName(def.diff) + "]  +" + coins + " coins", "green");
+		title(p.name, "TASK COMPLETE", def.name + "  [" + MapData.diffName(def.diff) + "]  +" + coins + " coins", "green");
 		cmd("playsound minecraft:entity.experience_orb.pickup master " + p.name);
 		hudDirty = true;
 		updateBar();
@@ -1122,6 +1180,7 @@ public final class Game {
 		double z = victimPlayer.getZ();
 		victim.alive = false;
 		victim.run = null;
+		cmd("dialog clear " + victim.name);
 		if (victim.ventLeft > 0) victim.ventLeft = 0;
 		killer.killCd = killCd * 20;
 		Stats.S ks = Stats.get(killer.id);

@@ -5,58 +5,146 @@ final class Layout {
 	private Layout() {}
 
 	static final String[] ROOM_NAMES = {"Upper Engine", "MedBay", "Cafeteria", "Weapons", "Reactor", "Security", "Admin", "O2", "Navigation", "Lower Engine", "Electrical", "Storage", "Communications", "Shields"};
-	static final String[] ROOM_FLOORS = {"minecraft:gray_concrete", "minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:black_concrete", "minecraft:black_concrete", "minecraft:gray_concrete", "minecraft:brown_terracotta", "minecraft:lime_terracotta", "minecraft:blue_terracotta", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:brown_concrete", "minecraft:gray_concrete", "minecraft:blue_concrete"};
+	static final String[] ROOM_FLOORS = {"minecraft:deepslate_tiles", "minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:black_concrete", "minecraft:polished_blackstone", "minecraft:gray_concrete", "minecraft:brown_terracotta", "minecraft:lime_terracotta", "minecraft:blue_terracotta", "minecraft:deepslate_tiles", "minecraft:gray_concrete", "minecraft:brown_concrete", "minecraft:gray_concrete", "minecraft:blue_concrete"};
+	static final String[] ROOM_BORDERS = {"minecraft:yellow_concrete", "minecraft:light_blue_concrete", "minecraft:blue_concrete", "minecraft:red_concrete", "minecraft:red_concrete", "minecraft:green_concrete", "minecraft:orange_terracotta", "minecraft:green_concrete", "minecraft:cyan_concrete", "minecraft:yellow_concrete", "minecraft:yellow_concrete", "minecraft:orange_terracotta", "minecraft:purple_concrete", "minecraft:light_blue_concrete"};
+	static final String[] ROOM_WALLS = {"minecraft:gray_concrete", "minecraft:white_concrete", "minecraft:light_gray_concrete", "minecraft:gray_concrete", "minecraft:black_concrete", "minecraft:gray_concrete", "minecraft:white_terracotta", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:gray_concrete", "minecraft:gray_concrete"};
+	static final String[] ROOM_TRIMS = {"minecraft:orange_concrete", "minecraft:cyan_concrete", "minecraft:blue_concrete", "minecraft:red_concrete", "minecraft:red_concrete", "minecraft:green_concrete", "minecraft:orange_concrete", "minecraft:lime_concrete", "minecraft:light_blue_concrete", "minecraft:orange_concrete", "minecraft:yellow_concrete", "minecraft:orange_concrete", "minecraft:purple_concrete", "minecraft:cyan_concrete"};
 	static final int[][] ROOMS = {{-95, -43, -73, -25}, {-55, -43, -37, -27}, {-21, -51, 21, -21}, {47, -43, 69, -27}, {-121, -19, -103, 13}, {-87, -9, -73, 5}, {15, -7, 37, 13}, {47, -17, 59, -3}, {85, -23, 105, -1}, {-95, 23, -73, 43}, {-55, 13, -35, 33}, {-17, 25, 9, 49}, {23, 35, 39, 51}, {57, 23, 77, 43}};
 	static final int[][] CORRIDORS = {{-74, -36, -54, -32}, {-38, -36, -20, -32}, {-110, -34, -94, -30}, {-112, -34, -108, -18}, {-104, -4, -86, 0}, {-112, 8, -108, 30}, {-112, 26, -94, 30}, {-74, 26, -54, 30}, {-36, 27, -16, 31}, {8, 40, 24, 44}, {38, 38, 58, 42}, {-2, 8, 2, 26}, {-2, 8, 16, 12}, {16, -22, 20, -6}, {20, -38, 48, -34}, {50, -28, 54, -16}, {58, -14, 86, -10}, {68, -34, 90, -30}, {86, -34, 90, -22}, {76, 26, 94, 30}, {90, -2, 94, 30}};
 	static final int BUTTON_X = 0, BUTTON_Z = -36, LOBBY_X = 0, LOBBY_Z = -30;
 
 	/** Decoration. Runs after floors and ceiling lights. */
 	static void decor() {
+		// ===== CAFETERIA =====
 		MapBuilder.fill(-5, -1, -41, 5, -1, -31, "minecraft:blue_concrete");
 		MapBuilder.fill(-3, -1, -39, 3, -1, -33, "minecraft:cyan_concrete");
 		MapBuilder.fill(-12, 0, -46, -10, 0, -44, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(-13, 0, -45, -13, 0, -45, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(-9, 0, -45, -9, 0, -45, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(-13, 0, -45, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(-9, 0, -45, "minecraft:smooth_quartz_stairs[facing=west]");
 		MapBuilder.fill(10, 0, -46, 12, 0, -44, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(9, 0, -45, 9, 0, -45, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(13, 0, -45, 13, 0, -45, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(9, 0, -45, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(13, 0, -45, "minecraft:smooth_quartz_stairs[facing=west]");
 		MapBuilder.fill(-12, 0, -28, -10, 0, -26, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(-13, 0, -27, -13, 0, -27, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(-9, 0, -27, -9, 0, -27, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(-13, 0, -27, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(-9, 0, -27, "minecraft:smooth_quartz_stairs[facing=west]");
 		MapBuilder.fill(10, 0, -28, 12, 0, -26, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(9, 0, -27, 9, 0, -27, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(13, 0, -27, 13, 0, -27, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(9, 0, -27, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(13, 0, -27, "minecraft:smooth_quartz_stairs[facing=west]");
 		MapBuilder.fill(-1, 0, -48, 1, 0, -46, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(-2, 0, -47, -2, 0, -47, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(2, 0, -47, 2, 0, -47, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(-2, 0, -47, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(2, 0, -47, "minecraft:smooth_quartz_stairs[facing=west]");
 		MapBuilder.fill(-1, 0, -26, 1, 0, -24, "minecraft:quartz_slab[type=bottom]");
-		MapBuilder.fill(-2, 0, -25, -2, 0, -25, "minecraft:smooth_quartz_stairs[facing=east]");
-		MapBuilder.fill(2, 0, -25, 2, 0, -25, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.set(-2, 0, -25, "minecraft:smooth_quartz_stairs[facing=east]");
+		MapBuilder.set(2, 0, -25, "minecraft:smooth_quartz_stairs[facing=west]");
+		MapBuilder.fill(-1, 0, -37, 1, 0, -35, "minecraft:polished_blackstone");
 		MapBuilder.set(0, 0, -36, "minecraft:red_concrete");
 		MapBuilder.set(0, 1, -36, "minecraft:crimson_button[face=floor]");
-		MapBuilder.set(69, 0, -39, "minecraft:dispenser[facing=east]");
-		MapBuilder.set(69, 0, -35, "minecraft:dispenser[facing=east]");
-		MapBuilder.set(69, 0, -31, "minecraft:dispenser[facing=east]");
+		MapBuilder.fill(-14, 1, -51, -8, 4, -51, "minecraft:black_concrete");
+		MapBuilder.fill(-13, 2, -51, -9, 3, -51, "minecraft:light_blue_concrete");
+		MapBuilder.fill(8, 1, -51, 14, 4, -51, "minecraft:black_concrete");
+		MapBuilder.fill(9, 2, -51, 13, 3, -51, "minecraft:light_blue_concrete");
+		MapBuilder.fill(-8, 0, -50, -4, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.fill(4, 0, -50, 8, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.fill(-20, 0, -46, -20, 0, -40, "minecraft:dark_oak_slab[type=bottom]");
+		MapBuilder.fill(20, 0, -46, 20, 0, -40, "minecraft:dark_oak_slab[type=bottom]");
+		MapBuilder.set(-20, 0, -50, "minecraft:potted_fern");
+		MapBuilder.set(20, 0, -50, "minecraft:potted_fern");
+		MapBuilder.set(-20, 0, -22, "minecraft:potted_fern");
+		MapBuilder.set(21, 0, -22, "minecraft:potted_fern");
+		// ===== UPPER ENGINE =====
+		MapBuilder.fill(-94, 0, -43, -92, 3, -43, "minecraft:copper_block");
+		MapBuilder.fill(-78, 0, -43, -76, 3, -43, "minecraft:copper_block");
+		MapBuilder.fill(-94, 4, -43, -76, 4, -43, "minecraft:chiseled_copper");
+		MapBuilder.set(-93, 1, -42, "minecraft:piston[facing=south]");
+		MapBuilder.set(-77, 1, -42, "minecraft:piston[facing=south]");
+		MapBuilder.fill(-88, 0, -39, -80, 0, -35, "minecraft:polished_blackstone");
+		MapBuilder.fill(-87, 1, -38, -81, 2, -36, "minecraft:iron_block");
+		MapBuilder.fill(-86, 3, -37, -82, 3, -37, "minecraft:sea_lantern");
+		// ===== LOWER ENGINE =====
+		MapBuilder.fill(-94, 0, 43, -92, 3, 43, "minecraft:copper_block");
+		MapBuilder.fill(-78, 0, 43, -76, 3, 43, "minecraft:copper_block");
+		MapBuilder.fill(-94, 4, 43, -76, 4, 43, "minecraft:chiseled_copper");
+		MapBuilder.set(-93, 1, 42, "minecraft:piston[facing=north]");
+		MapBuilder.set(-77, 1, 42, "minecraft:piston[facing=north]");
+		MapBuilder.fill(-88, 0, 35, -80, 0, 39, "minecraft:polished_blackstone");
+		MapBuilder.fill(-87, 1, 36, -81, 2, 38, "minecraft:iron_block");
+		MapBuilder.fill(-86, 3, 37, -82, 3, 37, "minecraft:sea_lantern");
+		// ===== MEDBAY =====
+		MapBuilder.set(-54, 0, -31, "minecraft:white_bed[facing=east,part=foot]");
+		MapBuilder.set(-53, 0, -31, "minecraft:white_bed[facing=east,part=head]");
+		MapBuilder.set(-54, 0, -29, "minecraft:white_bed[facing=east,part=foot]");
+		MapBuilder.set(-53, 0, -29, "minecraft:white_bed[facing=east,part=head]");
+		MapBuilder.fill(-48, 0, -38, -44, 0, -34, "minecraft:iron_block");
+		MapBuilder.fill(-47, 1, -37, -45, 1, -35, "minecraft:glass");
+		MapBuilder.set(-46, 2, -36, "minecraft:end_rod[facing=up]");
+		MapBuilder.fill(-45, 0, -43, -41, 0, -43, "minecraft:smooth_quartz");
+		MapBuilder.fill(-48, -1, -31, -44, -1, -31, "minecraft:red_concrete");
+		MapBuilder.fill(-46, -1, -33, -46, -1, -29, "minecraft:red_concrete");
+		// ===== WEAPONS =====
+		MapBuilder.set(69, 0, -41, "minecraft:dispenser[facing=west]");
+		MapBuilder.set(69, 0, -39, "minecraft:dispenser[facing=west]");
+		MapBuilder.set(69, 0, -37, "minecraft:dispenser[facing=west]");
 		MapBuilder.fill(60, 0, -41, 64, 0, -41, "minecraft:iron_block");
 		MapBuilder.fill(60, 1, -41, 64, 1, -41, "minecraft:iron_bars");
+		MapBuilder.fill(48, 0, -42, 48, 0, -40, "minecraft:iron_block");
+		MapBuilder.fill(48, 0, -31, 48, 0, -29, "minecraft:iron_block");
+		MapBuilder.set(48, 1, -41, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.set(48, 1, -30, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.fill(52, -1, -36, 66, -1, -36, "minecraft:red_concrete");
+		// ===== REACTOR =====
+		MapBuilder.fill(-114, 0, -5, -110, 0, -1, "minecraft:red_concrete");
+		MapBuilder.fill(-113, 1, -4, -111, 3, -2, "minecraft:redstone_block");
+		MapBuilder.fill(-112, 4, -3, -112, 6, -3, "minecraft:sea_lantern");
+		MapBuilder.fill(-115, 0, -6, -109, 1, -6, "minecraft:iron_bars");
+		MapBuilder.fill(-115, 0, 0, -109, 1, 0, "minecraft:iron_bars");
+		MapBuilder.fill(-115, 0, -5, -115, 1, -1, "minecraft:iron_bars");
+		MapBuilder.fill(-109, 0, -5, -109, 1, -1, "minecraft:iron_bars");
+		MapBuilder.fill(-121, 0, -12, -121, 2, -8, "minecraft:iron_block");
+		MapBuilder.fill(-121, 0, 1, -121, 2, 5, "minecraft:iron_block");
+		MapBuilder.set(-121, 3, -10, "minecraft:end_rod[facing=up]");
+		MapBuilder.set(-121, 3, 3, "minecraft:end_rod[facing=up]");
+		// ===== SECURITY =====
+		MapBuilder.fill(-86, 1, -9, -74, 3, -9, "minecraft:black_stained_glass");
+		MapBuilder.set(-84, 2, -9, "minecraft:sea_lantern");
+		MapBuilder.set(-80, 2, -9, "minecraft:sea_lantern");
+		MapBuilder.set(-76, 2, -9, "minecraft:sea_lantern");
+		MapBuilder.fill(-84, 0, -8, -76, 0, -8, "minecraft:dark_oak_slab[type=bottom]");
+		MapBuilder.set(-82, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
+		MapBuilder.set(-78, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
+		MapBuilder.fill(-86, -1, -2, -74, -1, -2, "minecraft:green_concrete");
+		// ===== ADMIN =====
+		MapBuilder.fill(24, 0, 1, 28, 0, 5, "minecraft:red_carpet");
+		MapBuilder.set(26, 0, 3, "minecraft:cartography_table");
+		MapBuilder.fill(24, 0, -7, 32, 2, -7, "minecraft:bookshelf");
+		MapBuilder.set(20, 0, 12, "minecraft:barrel[facing=up]");
+		MapBuilder.set(22, 0, 12, "minecraft:barrel[facing=up]");
+		MapBuilder.set(24, 0, 12, "minecraft:barrel[facing=up]");
+		// ===== O2 =====
 		MapBuilder.fill(51, 0, -12, 55, 5, -8, "minecraft:green_stained_glass hollow");
 		MapBuilder.fill(52, 0, -11, 54, 4, -9, "minecraft:azalea_leaves[persistent=true]");
 		MapBuilder.fill(48, 0, -5, 50, 0, -4, "minecraft:moss_block");
 		MapBuilder.fill(48, 1, -5, 50, 1, -4, "minecraft:azalea_leaves[persistent=true]");
+		MapBuilder.set(56, 0, -16, "minecraft:water_cauldron[level=3]");
+		MapBuilder.set(48, 0, -16, "minecraft:water_cauldron[level=3]");
+		MapBuilder.fill(47, 2, -17, 49, 2, -17, "minecraft:copper_block");
+		MapBuilder.fill(55, 2, -17, 59, 2, -17, "minecraft:copper_block");
+		// ===== NAVIGATION =====
 		MapBuilder.fill(105, 0, -22, 105, 4, -2, "minecraft:light_blue_stained_glass");
 		MapBuilder.fill(94, 0, -14, 98, 0, -14, "minecraft:smooth_quartz");
-		MapBuilder.set(96, 0, -13, "minecraft:lectern");
-		MapBuilder.fill(60, 0, 26, 60, 5, 26, "minecraft:light_blue_stained_glass");
-		MapBuilder.fill(74, 0, 26, 74, 5, 26, "minecraft:light_blue_stained_glass");
-		MapBuilder.fill(60, 0, 40, 60, 5, 40, "minecraft:light_blue_stained_glass");
-		MapBuilder.fill(74, 0, 40, 74, 5, 40, "minecraft:light_blue_stained_glass");
-		MapBuilder.fill(67, 0, 33, 67, 5, 33, "minecraft:light_blue_stained_glass");
-		MapBuilder.fill(25, 0, 37, 37, 0, 37, "minecraft:smooth_stone");
-		MapBuilder.fill(25, 1, 37, 37, 1, 37, "minecraft:black_stained_glass");
-		MapBuilder.fill(25, 0, 49, 37, 0, 49, "minecraft:smooth_stone");
-		MapBuilder.fill(25, 1, 49, 37, 1, 49, "minecraft:black_stained_glass");
-		MapBuilder.fill(24, 0, 1, 28, 0, 5, "minecraft:red_carpet");
-		MapBuilder.set(26, 0, 3, "minecraft:cartography_table");
+		MapBuilder.set(96, 0, -13, "minecraft:lectern[facing=north]");
+		MapBuilder.set(96, 0, -11, "minecraft:quartz_stairs[facing=north]");
+		MapBuilder.fill(104, 0, -20, 104, 0, -14, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.fill(92, 0, -23, 100, 0, -23, "minecraft:smooth_quartz_slab[type=bottom]");
+		MapBuilder.fill(90, -1, -13, 100, -1, -13, "minecraft:cyan_concrete");
+		// ===== ELECTRICAL =====
+		MapBuilder.fill(-54, 0, 13, -36, 3, 13, "minecraft:copper_block");
+		MapBuilder.fill(-54, 4, 13, -36, 4, 13, "minecraft:waxed_cut_copper");
+		MapBuilder.fill(-36, 0, 22, -36, 2, 26, "minecraft:iron_block");
+		MapBuilder.set(-36, 3, 23, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.set(-36, 3, 25, "minecraft:lightning_rod[facing=up]");
+		MapBuilder.fill(-54, 0, 20, -54, 2, 22, "minecraft:iron_block");
+		MapBuilder.fill(-54, -1, 32, -36, -1, 32, "minecraft:yellow_concrete");
+		// ===== STORAGE =====
 		MapBuilder.set(-12, 0, 34, "minecraft:barrel[facing=up]");
 		MapBuilder.set(-12, 0, 39, "minecraft:barrel[facing=up]");
 		MapBuilder.set(-12, 0, 44, "minecraft:barrel[facing=up]");
@@ -70,86 +158,27 @@ final class Layout {
 		MapBuilder.set(3, 0, 39, "minecraft:barrel[facing=up]");
 		MapBuilder.set(3, 0, 44, "minecraft:barrel[facing=up]");
 		MapBuilder.fill(6, 0, 26, 8, 1, 27, "minecraft:spruce_planks");
-		MapBuilder.fill(-54, 0, 13, -36, 3, 13, "minecraft:copper_block");
-		MapBuilder.fill(-54, 4, 13, -36, 4, 13, "minecraft:waxed_cut_copper");
-		MapBuilder.fill(-88, 0, -39, -80, 2, -35, "minecraft:iron_block");
-		MapBuilder.fill(-88, 3, -38, -80, 3, -36, "minecraft:sea_lantern");
-		MapBuilder.fill(-88, 0, 35, -80, 2, 39, "minecraft:iron_block");
-		MapBuilder.fill(-88, 3, 36, -80, 3, 38, "minecraft:sea_lantern");
-		MapBuilder.fill(-114, 0, -5, -110, 0, -1, "minecraft:red_concrete");
-		MapBuilder.fill(-113, 1, -4, -111, 3, -2, "minecraft:redstone_block");
-		MapBuilder.fill(-112, 4, -3, -112, 6, -3, "minecraft:sea_lantern");
-		MapBuilder.fill(-86, 1, -9, -74, 3, -9, "minecraft:black_stained_glass");
-		MapBuilder.set(-84, 2, -9, "minecraft:sea_lantern");
-		MapBuilder.set(-80, 2, -9, "minecraft:sea_lantern");
-		MapBuilder.set(-76, 2, -9, "minecraft:sea_lantern");
-		MapBuilder.fill(-48, 0, -38, -44, 0, -34, "minecraft:iron_block");
-		MapBuilder.fill(-47, 1, -37, -45, 1, -35, "minecraft:glass");
-		MapBuilder.fill(-53, 0, -33, -51, 0, -33, "minecraft:white_carpet");
-
-		// ---- more room details (v3.1) ----
-		// cafeteria: snack counters + plants
-		MapBuilder.fill(-8, 0, -50, -4, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
-		MapBuilder.fill(4, 0, -50, 8, 0, -50, "minecraft:smooth_quartz_slab[type=bottom]");
-		MapBuilder.set(-20, 0, -50, "minecraft:potted_fern");
-		MapBuilder.set(20, 0, -50, "minecraft:potted_fern");
-		MapBuilder.set(-20, 0, -22, "minecraft:potted_fern");
-		MapBuilder.set(20, 0, -22, "minecraft:potted_fern");
-		// upper + lower engine: copper coils
-		MapBuilder.fill(-94, 0, -43, -92, 2, -43, "minecraft:copper_block");
-		MapBuilder.fill(-78, 0, -43, -76, 2, -43, "minecraft:copper_block");
-		MapBuilder.set(-93, 3, -43, "minecraft:sea_lantern");
-		MapBuilder.set(-77, 3, -43, "minecraft:sea_lantern");
-		MapBuilder.fill(-94, 0, 43, -92, 2, 43, "minecraft:copper_block");
-		MapBuilder.fill(-78, 0, 43, -76, 2, 43, "minecraft:copper_block");
-		MapBuilder.set(-93, 3, 43, "minecraft:sea_lantern");
-		MapBuilder.set(-77, 3, 43, "minecraft:sea_lantern");
-		// medbay: beds + counter
-		MapBuilder.set(-54, 0, -31, "minecraft:white_bed[facing=east,part=foot]");
-		MapBuilder.set(-53, 0, -31, "minecraft:white_bed[facing=east,part=head]");
-		MapBuilder.set(-54, 0, -29, "minecraft:white_bed[facing=east,part=foot]");
-		MapBuilder.set(-53, 0, -29, "minecraft:white_bed[facing=east,part=head]");
-		MapBuilder.fill(-45, 0, -43, -41, 0, -43, "minecraft:smooth_quartz");
-		// weapons: cannons
-		MapBuilder.fill(48, 0, -37, 48, 0, -33, "minecraft:iron_block");
-		MapBuilder.set(48, 1, -37, "minecraft:lightning_rod[facing=up]");
-		MapBuilder.set(48, 1, -35, "minecraft:lightning_rod[facing=up]");
-		MapBuilder.set(48, 1, -33, "minecraft:lightning_rod[facing=up]");
-		// reactor: containment bars around the core
-		MapBuilder.fill(-115, 0, -6, -109, 1, -6, "minecraft:iron_bars");
-		MapBuilder.fill(-115, 0, 0, -109, 1, 0, "minecraft:iron_bars");
-		MapBuilder.fill(-115, 0, -5, -115, 1, -1, "minecraft:iron_bars");
-		MapBuilder.fill(-109, 0, -5, -109, 1, -1, "minecraft:iron_bars");
-		// security: desk + chairs
-		MapBuilder.fill(-84, 0, -8, -76, 0, -8, "minecraft:dark_oak_slab[type=bottom]");
-		MapBuilder.set(-82, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
-		MapBuilder.set(-78, 0, -7, "minecraft:dark_oak_stairs[facing=north]");
-		// admin: filing cabinets
-		MapBuilder.set(20, 0, 12, "minecraft:barrel[facing=up]");
-		MapBuilder.set(22, 0, 12, "minecraft:barrel[facing=up]");
-		MapBuilder.set(24, 0, 12, "minecraft:barrel[facing=up]");
-		// o2: water tanks
-		MapBuilder.set(56, 0, -16, "minecraft:water_cauldron[level=3]");
-		MapBuilder.set(48, 0, -16, "minecraft:water_cauldron[level=3]");
-		// navigation: pilot chair + side console
-		MapBuilder.set(96, 0, -11, "minecraft:quartz_stairs[facing=north]");
-		MapBuilder.fill(104, 0, -20, 104, 0, -14, "minecraft:smooth_quartz_slab[type=bottom]");
-		// electrical: generators + fuse boxes
-		MapBuilder.fill(-36, 0, 22, -36, 2, 26, "minecraft:iron_block");
-		MapBuilder.set(-36, 3, 23, "minecraft:lightning_rod[facing=up]");
-		MapBuilder.set(-36, 3, 25, "minecraft:lightning_rod[facing=up]");
-		MapBuilder.fill(-54, 0, 20, -54, 2, 22, "minecraft:iron_block");
-		// storage: crates
 		MapBuilder.fill(-16, 0, 48, -14, 1, 49, "minecraft:spruce_planks");
 		MapBuilder.fill(7, 0, 45, 8, 1, 48, "minecraft:spruce_planks");
-		MapBuilder.fill(-16, 0, 26, -15, 1, 27, "minecraft:hay_block[axis=y]");
-		// communications: server racks + dish
+		MapBuilder.fill(-16, 0, 35, -15, 1, 36, "minecraft:hay_block[axis=y]");
+		MapBuilder.fill(-10, 0, 49, 4, 2, 49, "minecraft:barrel[facing=north]");
+		// ===== COMMUNICATIONS =====
+		MapBuilder.fill(25, 0, 37, 37, 0, 37, "minecraft:smooth_stone");
+		MapBuilder.fill(25, 1, 37, 37, 1, 37, "minecraft:black_stained_glass");
+		MapBuilder.fill(25, 0, 49, 37, 0, 49, "minecraft:smooth_stone");
+		MapBuilder.fill(25, 1, 49, 37, 1, 49, "minecraft:black_stained_glass");
 		MapBuilder.fill(24, 0, 46, 24, 2, 50, "minecraft:blast_furnace[facing=east]");
 		MapBuilder.fill(37, 0, 50, 38, 0, 51, "minecraft:iron_block");
 		MapBuilder.set(37, 1, 50, "minecraft:lightning_rod[facing=up]");
-		// shields: generators
+		// ===== SHIELDS =====
+		MapBuilder.fill(60, 0, 26, 60, 5, 26, "minecraft:light_blue_stained_glass");
+		MapBuilder.fill(74, 0, 26, 74, 5, 26, "minecraft:light_blue_stained_glass");
+		MapBuilder.fill(60, 0, 40, 60, 5, 40, "minecraft:light_blue_stained_glass");
+		MapBuilder.fill(74, 0, 40, 74, 5, 40, "minecraft:light_blue_stained_glass");
+		MapBuilder.fill(67, 0, 33, 67, 5, 33, "minecraft:light_blue_stained_glass");
 		MapBuilder.fill(75, 0, 34, 76, 2, 36, "minecraft:cyan_terracotta");
 		MapBuilder.set(75, 3, 35, "minecraft:sea_lantern");
+		MapBuilder.fill(63, -1, 31, 71, -1, 35, "minecraft:cyan_concrete");
 	}
 
 	/** Stations, vents, panels, tasks. Runs last so nothing overwrites them. */
@@ -243,8 +272,23 @@ final class Layout {
 		s.b = b;
 		s.room = room;
 		s.pos = MapBuilder.p(x, 0, z);
-		MapBuilder.set(x, 0, z, "minecraft:lectern");
+		MapBuilder.set(x, 0, z, stationBlock(mech));
 		return s;
+	}
+
+	/** Each kind of task has its own kind of station block, so they look different around the ship. */
+	private static String stationBlock(String mech) {
+		return switch (mech) {
+			case "wires", "shields" -> "minecraft:crafter";
+			case "clicks" -> "minecraft:grindstone[face=floor,facing=north]";
+			case "hold" -> "minecraft:cartography_table";
+			case "sneak" -> "minecraft:composter";
+			case "swipe" -> "minecraft:lodestone";
+			case "bar" -> "minecraft:jukebox";
+			case "asteroids" -> "minecraft:dispenser[facing=up]";
+			case "sample" -> "minecraft:brewing_stand";
+			default -> "minecraft:lectern[facing=south]"; // code, math, order, memory
+		};
 	}
 
 	private static void task(MapData m, String name, int diff, MapData.Step... steps) {

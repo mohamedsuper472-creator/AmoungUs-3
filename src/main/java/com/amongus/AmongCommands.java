@@ -28,6 +28,9 @@ public final class AmongCommands {
 			l.add("skip");
 			return SharedSuggestionProvider.suggest(l, b);
 		};
+	private static final SuggestionProvider<CommandSourceStack> ROLES =
+		(ctx, b) -> SharedSuggestionProvider.suggest(
+			Arrays.asList("crewmate", "engineer", "scientist", "impostor", "shapeshifter", "random"), b);
 	private static final SuggestionProvider<CommandSourceStack> GAMES =
 		(ctx, b) -> SharedSuggestionProvider.suggest(
 			Game.created ? java.util.List.of(Game.gameName) : java.util.List.<String>of(), b);
@@ -93,6 +96,15 @@ public final class AmongCommands {
 				})
 				.then(Commands.argument("code", StringArgumentType.word()).executes(c -> {
 					Game.setPrivate(pl(c), StringArgumentType.getString(c, "code"));
+					return 1;
+				})))
+			.then(Commands.literal("role")
+				.executes(c -> {
+					Game.forceRole(pl(c), null);
+					return 1;
+				})
+				.then(Commands.argument("role", StringArgumentType.word()).suggests(ROLES).executes(c -> {
+					Game.forceRole(pl(c), StringArgumentType.getString(c, "role"));
 					return 1;
 				})))
 			.then(Commands.literal("games").executes(c -> {
